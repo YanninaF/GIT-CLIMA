@@ -15,49 +15,52 @@ def main(ciudad, formato):
         if respuesta.status_code == 200:
             json_data = respuesta.json()
             
-            # Verificar si hay un error en la respuesta JSON
-            if 'error' in json_data:
-                print(f"Error: {json_data['error']['message']}. Verifica la ortografía de la ciudad e intentalo nuevamente.")
+            
+            # Trae la información
+            location = json_data['location']
+            c = json_data['current']
+
+            ciudad = location['name']
+            region = location['region']
+            pais = location['country']
+            temperatura_actual = c['temp_c']  
+            condicion_actual = c['condition']['text']
+            precipitacion = c['precip_mm']
+            humedad = c['humidity']
+            fecha_actualizacion = c['last_updated']
+
+            if formato == "json":
+                datos_resu = {
+                    "ciudad": ciudad,
+                    "region": region,
+                    "pais": pais,
+                    "temperatura_actual": temperatura_actual,
+                    "condicion_actual": condicion_actual,
+                    "precipitacion": precipitacion,
+                    "humedad": humedad,
+                    "fecha_actualizacion": fecha_actualizacion,
+                }
+                print(json.dumps(datos_resu, indent=6))
             else:
-                # Trae la información
-                location = json_data['location']
-                c = json_data['current']
+                # Formatear y mostrar el texto plano
+                data = f"""
+                Ciudad: {ciudad}, {region}, {pais}
+                Temperatura actual: {temperatura_actual}°C
+                Condición actual: {condicion_actual}
+                Precipitación: {precipitacion}mm
+                Humedad: {humedad}
+                Última actualización: {fecha_actualizacion}
+                """
+                print(data)
 
-                ciudad = location['name']
-                region = location['region']
-                pais = location['country']
-                temperatura_actual = c['temp_c']  
-                condicion_actual = c['condition']['text']
-                precipitacion = c['precip_mm']
-                humedad = c['humidity']
-                fecha_actualizacion = c['last_updated']
-
-                if formato == "json":
-                    datos_resu = {
-                        "ciudad": ciudad,
-                        "region": region,
-                        "pais": pais,
-                        "temperatura_actual": temperatura_actual,
-                        "condicion_actual": condicion_actual,
-                        "precipitacion": precipitacion,
-                        "humedad": humedad,
-                        "fecha_actualizacion": fecha_actualizacion,
-                    }
-                    print(json.dumps(datos_resu, indent=6))
-                else:
-                    # Formatear y mostrar el texto plano
-                    data = f"""
-                    Ciudad: {ciudad}, {region}, {pais}
-                    Temperatura actual: {temperatura_actual}°C
-                    Condición actual: {condicion_actual}
-                    Precipitación: {precipitacion}mm
-                    Humedad: {humedad}
-                    Última actualización: {fecha_actualizacion}
-                    """
-                    print(data)
-
+        # Manejo del error cuando la respuesta no es exitosa (ubicación no encontrada, código 400)
+        elif respuesta.status_code == 400:
+            raise Exception(f"Ubicación no encontrada: {ciudad}")
         else:
             print(f"Error: No se pudo conectar a la API. Código de respuesta: {respuesta.status_code}")
+    
+    except Exception as e:
+        print(f"Error: {e}")
     except requests.exceptions.RequestException as e:
         print(f"Error de conexión: {e}")
 
